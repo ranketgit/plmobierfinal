@@ -6,7 +6,7 @@ import { locations } from '../../data/locations';
 export async function getStaticPaths() {
   return locations.flatMap(location => 
     location.communes.map(commune => ({
-      params: { ville: location.ville, commune },
+      params: { ville: location.province, commune },
     }))
   );
 }
