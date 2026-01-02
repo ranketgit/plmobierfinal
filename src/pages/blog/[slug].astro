@@ -1,0 +1,352 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { title, description, date, image, categories } = post.data;
+const { Content } = await post.render();
+
+const formattedDate = new Date(date).toLocaleDateString('fr-BE', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const relatedPosts = allPosts
+  .filter(p => p.slug !== post.slug && p.data.categories?.some(cat => categories?.includes(cat)))
+  .slice(0, 3);
+---
+
+<Layout title={title} description={description}>
+  <!-- Hero Section -->
+  <section 
+    class="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 text-white py-24"
+    style={image ? `background-image: linear-gradient(rgba(30, 58, 138, 0.9), rgba(30, 64, 175, 0.9)), url('${image}'); background-size: cover; background-position: center;` : ''}
+  >
+    <div class="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent"></div>
+    
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <!-- Breadcrumb -->
+      <nav class="mb-8">
+        <ol class="flex items-center space-x-2 text-sm text-blue-200">
+          <li><a href="/" class="hover:text-white transition-colors">Accueil</a></li>
+          <li><span>/</span></li>
+          <li><a href="/blog/" class="hover:text-white transition-colors">Blog</a></li>
+          <li><span>/</span></li>
+          <li class="text-white truncate max-w-[200px]">{title}</li>
+        </ol>
+      </nav>
+
+      <!-- Categories -->
+      {categories && categories.length > 0 && (
+        <div class="flex flex-wrap gap-2 mb-6">
+          {categories.map((category) => (
+            <span class="inline-block px-4 py-1 rounded-full bg-blue-500/20 backdrop-blur-sm text-white text-sm font-medium">
+              {category}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <!-- Title -->
+      <h1 class="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+        {title}
+      </h1>
+
+      <!-- Description -->
+      <p class="text-xl text-blue-100 mb-6 max-w-3xl">
+        {description}
+      </p>
+
+      <!-- Date -->
+      <div class="flex items-center text-blue-200">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <time datetime={date.toISOString()}>{formattedDate}</time>
+      </div>
+    </div>
+  </section>
+
+  <!-- Article Content -->
+  <article class="py-16 bg-white">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 article-content">
+      <Content />
+    </div>
+  </article>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-gradient-to-br from-blue-900 to-blue-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center text-white">
+        <h2 class="text-4xl font-bold mb-6">Besoin d'un <strong>plombier en urgence</strong> ?</h2>
+        <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          Notre équipe de plombiers professionnels est disponible <strong>24/7</strong> pour répondre à tous vos besoins.
+        </p>
+        <a href="tel:0472808080" class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition duration-300 shadow-lg hover:shadow-xl inline-block">
+          📞 Appeler maintenant
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Related Posts -->
+  {relatedPosts.length > 0 && (
+    <section class="py-20 bg-gray-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-center mb-12">Articles Similaires</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {relatedPosts.map((relatedPost, index) => (
+            <a 
+              href={`/blog/${relatedPost.slug}/`} 
+              class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 hover:border-blue-200 group block"
+              data-aos="fade-up"
+              data-aos-delay={((index % 3) * 100).toString()}
+            >
+              {relatedPost.data.image && (
+                <img 
+                  src={relatedPost.data.image} 
+                  alt={relatedPost.data.title}
+                  class="w-full h-48 object-cover rounded-lg mb-4"
+                  loading="lazy"
+                />
+              )}
+              <h3 class="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-2">
+                {relatedPost.data.title}
+              </h3>
+              <p class="text-gray-600 text-sm line-clamp-2">
+                {relatedPost.data.description}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Back to Blog -->
+  <div class="bg-white py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <a href="/blog/" class="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Retour au Blog
+      </a>
+    </div>
+  </div>
+</Layout>
+
+<style is:global>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .article-content {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: #4b5563;
+  }
+
+  .article-content > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .article-content h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  .article-content h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #2563eb;
+    line-height: 1.3;
+  }
+
+  .article-content h3 {
+    font-size: 1.375rem;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .article-content h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .article-content p {
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+  }
+
+  .article-content a {
+    color: #2563eb;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.2s;
+  }
+
+  .article-content a:hover {
+    color: #1d4ed8;
+  }
+
+  .article-content strong {
+    color: #111827;
+    font-weight: 600;
+  }
+
+  .article-content ul {
+    margin: 1.5rem 0;
+    padding-left: 1.5rem;
+    list-style-type: disc;
+  }
+
+  .article-content ol {
+    margin: 1.5rem 0;
+    padding-left: 1.5rem;
+    list-style-type: decimal;
+  }
+
+  .article-content li {
+    margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
+    line-height: 1.7;
+  }
+
+  .article-content li::marker {
+    color: #2563eb;
+  }
+
+  .article-content blockquote {
+    border-left: 4px solid #2563eb;
+    padding: 1rem 1.5rem;
+    margin: 2rem 0;
+    background-color: #eff6ff;
+    border-radius: 0 0.75rem 0.75rem 0;
+    font-style: italic;
+    color: #4b5563;
+  }
+
+  .article-content img {
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    margin: 2rem auto;
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .article-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 0.95rem;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  }
+
+  .article-content thead {
+    background-color: #2563eb;
+  }
+
+  .article-content th {
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .article-content td {
+    border: 1px solid #e5e7eb;
+    padding: 0.875rem 1rem;
+    color: #4b5563;
+  }
+
+  .article-content tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+  }
+
+  .article-content tbody tr:hover {
+    background-color: #eff6ff;
+  }
+
+  .article-content code {
+    background-color: #f3f4f6;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-family: ui-monospace, monospace;
+    color: #374151;
+  }
+
+  .article-content pre {
+    background-color: #1e293b;
+    color: #e5e7eb;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    margin: 2rem 0;
+    font-size: 0.875rem;
+  }
+
+  .article-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .article-content hr {
+    border: none;
+    border-top: 2px solid #e5e7eb;
+    margin: 3rem 0;
+  }
+
+  @media (min-width: 1024px) {
+    .article-content {
+      font-size: 1.175rem;
+    }
+    
+    .article-content h1 {
+      font-size: 2.5rem;
+    }
+    
+    .article-content h2 {
+      font-size: 2rem;
+    }
+    
+    .article-content h3 {
+      font-size: 1.5rem;
+    }
+  }
+</style>

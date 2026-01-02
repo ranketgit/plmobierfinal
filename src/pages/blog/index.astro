@@ -1,0 +1,73 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BlogCard from '../../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const title = "Blog Plomberie | Conseils & Astuces | Plombier en Urgence";
+const description = "Découvrez nos articles et conseils sur la plomberie, les réparations d'urgence et l'entretien de vos installations sanitaires en Belgique.";
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const sortedPosts = allPosts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<Layout title={title} description={description}>
+  <!-- Hero Section -->
+  <section class="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-600 text-white py-24">
+    <div class="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
+      <span class="inline-block px-4 py-1 rounded-full bg-blue-500/20 backdrop-blur-sm text-white mb-6">
+        Conseils & Astuces Plomberie
+      </span>
+      <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+        Blog Plombier en Urgence
+      </h1>
+      <p class="text-xl text-blue-100 max-w-3xl mx-auto">
+        Conseils, astuces et guides pratiques sur la <strong>plomberie</strong>, 
+        les <strong>réparations d'urgence</strong> et l'entretien de vos installations en <strong>Belgique</strong>.
+      </p>
+    </div>
+  </section>
+
+  <!-- Blog Posts Grid -->
+  <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {sortedPosts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {sortedPosts.map((post, index) => (
+            <BlogCard post={post} index={index} />
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-16">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+            </svg>
+          </div>
+          <p class="text-xl text-gray-600">Aucun article disponible pour le moment.</p>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-gradient-to-br from-blue-900 to-blue-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center text-white">
+        <h2 class="text-4xl font-bold mb-6">Besoin d'un <strong>plombier en urgence</strong> ?</h2>
+        <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          Notre équipe de plombiers professionnels est disponible <strong>24/7</strong> pour répondre à tous vos besoins en <strong>Belgique</strong>.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+          <a href="tel:0472808080" class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition duration-300 shadow-lg hover:shadow-xl">
+            📞 Appeler maintenant
+          </a>
+          <a href="/contact" class="border-2 border-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition duration-300">
+            Demander un devis
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
